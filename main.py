@@ -76,13 +76,17 @@ def main():
         mode = "TEST (list 7699)" if args.test else "PRODUCTION (list 22)"
         print(f"Staging draft in {mode} mode …")
 
-        from segment import find_segment_by_name
+        import os
         from campaign import create_draft
 
         if args.segment_id:
             segment_id = args.segment_id
-            print(f"Using segment id={segment_id} (--segment-id override)")
+            print(f"Using segment id={segment_id} (--segment-id flag)")
+        elif os.environ.get("SEGMENT_ID"):
+            segment_id = os.environ["SEGMENT_ID"]
+            print(f"Using segment id={segment_id} (SEGMENT_ID env var)")
         else:
+            from segment import find_segment_by_name
             segment_id = find_segment_by_name("joe-favorite")
             print(f"Resolved segment 'joe-favorite' -> id={segment_id}")
 
