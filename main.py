@@ -60,7 +60,7 @@ def main():
 
         from message import create_message
         message_id = create_message(subject=args.subject, html=html)
-        print(f"Message created → id={message_id}")
+        print(f"Message created -> id={message_id}")
 
     if args.draft:
         if not message_id:
@@ -78,7 +78,7 @@ def main():
         from campaign import create_draft
 
         segment_id = find_segment_by_name("joe-favorite")
-        print(f"Resolved segment 'joe-favorite' → id={segment_id}")
+        print(f"Resolved segment 'joe-favorite' -> id={segment_id}")
 
         subject_label = args.subject or message_id
         campaign_name = f"BCW — {subject_label}"
