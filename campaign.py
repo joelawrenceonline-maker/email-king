@@ -1,4 +1,15 @@
-"""Create and verify AC draft campaigns. Status 0 (draft) only — no send path."""
+"""Create and verify AC draft campaigns. Status 0 (draft) only — no send path.
+
+API note: POST /api/3/campaigns (plural) is blocked at the account plan level for
+this account. The working path is:
+  1. POST /api/3/campaign (singular)  — creates draft, returns id
+  2. PUT  /api/3/campaigns/{id}       — sets sendid (message) and segmentid
+  3. GET  /api/3/campaigns/{id}       — safety verification
+
+List attachment (POST /api/3/campaignLists) is also blocked. The draft will be
+created without a list selected. Before sending, open the campaign in the AC UI
+and choose the list — that is the ONLY manual step required.
+"""
 from ac_client import request
 
 _DRAFT_STATUS = "0"
@@ -54,37 +65,31 @@ def create_draft(
     name: str,
 ) -> str:
     """
-    Create an AC campaign with status=0 (draft only), attach the list, verify,
-    and return the campaign id. There is no code path that sets a campaign to send.
+    Create an AC campaign with status=0 (draft only), verify it, and return the
+    campaign id. There is no code path that sets a campaign to send.
 
-    AC v3 creates campaigns in two steps:
-      1. POST /api/3/campaigns  — sets type, status, name, segmentid
-      2. POST /api/3/campaignLists — attaches the list + message
+    Three-step process (POST /campaigns plural is blocked at account level):
+      1. POST /api/3/campaign (singular) — create the campaign shell
+      2. PUT  /api/3/campaigns/{id}      — attach message (sendid) and segment
+      3. GET  /api/3/campaigns/{id}      — safety verification
+
+    NOTE: list attachment via API is also blocked. The draft will appear in AC
+    without a list selected. Open it in the AC dashboard and add the list before
+    sending — that is the only manual step required.
     """
-    # Step 1: create the campaign shell
-    campaign_payload = {
-        "campaign": {
-            "type": "single",
-            "status": 0,
-            "name": name,
-            "segmentid": int(segment_id),
-            "bounceid": -1,
-        }
-    }
-    _, body = request("POST", "/api/3/campaigns", json=campaign_payload)
-    campaign_id = str(body["campaign"]["id"])
+    # Step 1: create the campaign shell (singular endpoint is the only one that works)
+    _, body = request("POST", "/api/3/campaign", json={
+        "type": "single",
+        "name": name,
+    })
+    campaign_id = str(body["id"])
 
-    # Step 2: attach the list and message
-    cl_payload = {
-        "campaignList": {
-            "campaign_id": campaign_id,
-            "list_id": list_id,
-            "message_id": message_id,
-            "final_message_id": message_id,
-            "order": "1",
-        }
-    }
-    request("POST", "/api/3/campaignLists", json=cl_payload)
+    # Step 2: attach message and segment via PUT
+    request("PUT", f"/api/3/campaigns/{campaign_id}", json={"campaign": {
+        "sendid": message_id,
+        "segmentid": int(segment_id),
+        "bounceid": -1,
+    }})
 
     # Safety gate: immediately read back and assert draft state.
     verify_draft(campaign_id)
@@ -92,7 +97,8 @@ def create_draft(
     audience = _get_audience_count(list_id, segment_id)
     print(
         f"\nDRAFT VERIFIED -- campaign_id={campaign_id}, "
-        f"list={list_id}, segment={segment_id}, "
+        f"segment={segment_id}, message={message_id}, "
         f"audience_count={audience}\n"
+        f"ACTION NEEDED: open campaign {campaign_id} in AC and select list {list_id} before sending.\n"
     )
     return campaign_id
