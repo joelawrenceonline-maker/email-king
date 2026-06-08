@@ -10,12 +10,11 @@ Tools:
   stage_draft(message_id, test)    — stage draft campaign for an existing message
   stage_email(subject, html, test) — full pipeline: create message + stage draft
 """
+import json
 import os
 import uvicorn
 from fastmcp import FastMCP
 from fastmcp.server.http import create_streamable_http_app
-from starlette.responses import JSONResponse
-from starlette.routing import Route
 
 mcp = FastMCP(
     "email-king",
@@ -86,11 +85,11 @@ def stage_draft(message_id: str, test: bool = False) -> str:
         message_id=message_id,
         segment_id=segment_id,
         list_id=list_id,
-        name=f"BCW Draft — msg {message_id}",
+        name=f"BCW Draft -- msg {message_id}",
     )
     audience = _get_audience_count(list_id, segment_id)
     return (
-        f"DRAFT VERIFIED — campaign_id={campaign_id}, "
+        f"DRAFT VERIFIED -- campaign_id={campaign_id}, "
         f"segmentid={segment_id}, list={list_id} ({mode}), "
         f"audience_count={audience}"
     )
@@ -102,10 +101,10 @@ def stage_email(subject: str, html: str, test: bool = False) -> str:
     Full pipeline: create an AC message then stage it as a draft campaign.
 
     Steps (proven flow):
-      1. POST /api/3/messages — creates message, verifies html non-empty
-      2. Legacy campaign_create — creates draft with list + message attached
-      3. V3 PUT segmentid=953 — attaches joe-favorite segment
-      4. V3 GET verification — asserts status=0, send_amt=0, ldate=null
+      1. POST /api/3/messages -- creates message, verifies html non-empty
+      2. Legacy campaign_create -- creates draft with list + message attached
+      3. V3 PUT segmentid=953 -- attaches joe-favorite segment
+      4. V3 GET verification -- asserts status=0, send_amt=0, ldate=null
 
     test=True  -> list 7699 (test)
     test=False -> list 22  (production, ~16 475 contacts)
@@ -124,25 +123,43 @@ def stage_email(subject: str, html: str, test: bool = False) -> str:
         message_id=message_id,
         segment_id=segment_id,
         list_id=list_id,
-        name=f"BCW — {subject}",
+        name=f"BCW -- {subject}",
     )
     audience = _get_audience_count(list_id, segment_id)
     return (
-        f"DRAFT VERIFIED — message_id={message_id}, campaign_id={campaign_id}, "
+        f"DRAFT VERIFIED -- message_id={message_id}, campaign_id={campaign_id}, "
         f"segmentid={segment_id}, list={list_id} ({mode}), "
         f"audience_count={audience}"
     )
 
 
-async def _health(request):
-    return JSONResponse({"status": "ok", "service": "email-king"})
+_HEALTH_BODY = json.dumps({"status": "ok", "service": "email-king"}).encode()
+_HEALTH_HEADERS = [
+    [b"content-type", b"application/json"],
+    [b"content-length", str(len(_HEALTH_BODY)).encode()],
+]
+
+
+class _HealthMiddleware:
+    """Intercept GET /health before the FastMCP app sees it."""
+
+    def __init__(self, app):
+        self.app = app
+
+    async def __call__(self, scope, receive, send):
+        if scope.get("type") == "http" and scope.get("path") == "/health":
+            await send({
+                "type": "http.response.start",
+                "status": 200,
+                "headers": _HEALTH_HEADERS,
+            })
+            await send({"type": "http.response.body", "body": _HEALTH_BODY})
+        else:
+            await self.app(scope, receive, send)
 
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8000))
-    app = create_streamable_http_app(
-        mcp,
-        streamable_http_path="/mcp",
-        routes=[Route("/health", _health)],
-    )
+    mcp_app = create_streamable_http_app(mcp, streamable_http_path="/mcp")
+    app = _HealthMiddleware(mcp_app)
     uvicorn.run(app, host="0.0.0.0", port=port)
