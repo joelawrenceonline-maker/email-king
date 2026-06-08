@@ -32,11 +32,9 @@ Set these in Railway (never commit real values):
 | `AC_API_URL` | Your AC account API base URL, e.g. `https://youraccount.api-us1.com` |
 | `AC_API_TOKEN` | ActiveCampaign API token (Settings → Developer) |
 | `NUDGE_TO` | Your personal email address that receives the morning reminder |
+| `NUDGE_FROM` | From address for nudge emails (must be a verified Resend sender) |
 | `DRAFT_LINK` | URL to open when the nudge arrives (e.g. your AC campaigns dashboard) |
-| `SMTP_HOST` | SMTP server hostname for outbound nudge email |
-| `SMTP_USER` | SMTP login username |
-| `SMTP_PASS` | SMTP login password |
-| `SMTP_FROM` | From address for nudge emails |
+| `RESEND_API_KEY` | Resend API key for outbound nudge email |
 
 Copy `.env.example` → `.env` for local dev. `.env` is gitignored.
 
@@ -81,7 +79,7 @@ Only after that should you run without `--test` (which targets list 22).
 ## Local dev
 
 ```bash
-pip install -r requirements.txt
+pip install -r requirements.txt   # only requests; Resend uses stdlib urllib
 cp .env.example .env   # fill in real values
 set -a && source .env  # or: export $(cat .env | xargs)
 

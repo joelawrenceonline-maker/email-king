@@ -1,5 +1,14 @@
 # Update Log
 
+## v0.2.0 — 2026-06-08
+
+Switch nudge sender from SMTP to Resend HTTP API.
+
+- `notify.py` — replaced smtplib with a direct POST to `https://api.resend.com/emails`
+  using `RESEND_API_KEY` (Bearer) and `NUDGE_FROM` env vars; drops all `SMTP_*` vars
+- `README.md` — env var table updated; SMTP vars removed
+- `.env.example` — SMTP vars removed; RESEND_API_KEY and NUDGE_FROM added
+
 ## v0.1.0 — 2026-06-08
 
 Initial build: weekday morning nudge + draft-only ActiveCampaign campaign stager
