@@ -15,6 +15,7 @@ import uvicorn
 from fastmcp import FastMCP
 from fastmcp.server.http import create_streamable_http_app
 from starlette.responses import JSONResponse
+from starlette.routing import Route
 
 mcp = FastMCP(
     "email-king",
@@ -139,6 +140,9 @@ async def _health(request):
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8000))
-    app = create_streamable_http_app(mcp, streamable_http_path="/mcp")
-    app.add_route("/health", _health)
+    app = create_streamable_http_app(
+        mcp,
+        streamable_http_path="/mcp",
+        routes=[Route("/health", _health)],
+    )
     uvicorn.run(app, host="0.0.0.0", port=port)
