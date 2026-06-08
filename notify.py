@@ -3,7 +3,7 @@ import os
 import json
 import urllib.request
 
-_SUBJECT = "Time to draft today's BCW email"
+_SUBJECT = "Time to write today's BCW email"
 _RESEND_URL = "https://api.resend.com/emails"
 
 
@@ -18,7 +18,7 @@ def send_morning_nudge() -> None:
     nudge_to = os.environ["NUDGE_TO"]
     draft_link = os.environ["DRAFT_LINK"]
 
-    body_text = f"Time to write today's BCW email. Open your draft here:\n{draft_link}\n"
+    body_text = f"Time to start today's BCW email. Jump into your drafting project here:\n{draft_link}\n"
 
     payload = json.dumps({
         "from": nudge_from,
