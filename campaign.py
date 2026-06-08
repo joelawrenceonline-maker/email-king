@@ -54,28 +54,44 @@ def create_draft(
     name: str,
 ) -> str:
     """
-    Create an AC campaign with status=0 (draft only), verify it, and return the
-    campaign id. There is no code path that sets a campaign to send.
+    Create an AC campaign with status=0 (draft only), attach the list, verify,
+    and return the campaign id. There is no code path that sets a campaign to send.
+
+    AC v3 creates campaigns in two steps:
+      1. POST /api/3/campaigns  — sets type, status, name, segmentid
+      2. POST /api/3/campaignLists — attaches the list + message
     """
-    payload = {
+    # Step 1: create the campaign shell
+    campaign_payload = {
         "campaign": {
             "type": "single",
             "status": 0,
             "name": name,
             "segmentid": int(segment_id),
-            "lists": [{"list": {"id": list_id}}],
-            "messages": [{"message": {"id": message_id}}],
+            "bounceid": -1,
         }
     }
-    _, body = request("POST", "/api/3/campaigns", json=payload)
+    _, body = request("POST", "/api/3/campaigns", json=campaign_payload)
     campaign_id = str(body["campaign"]["id"])
+
+    # Step 2: attach the list and message
+    cl_payload = {
+        "campaignList": {
+            "campaign_id": campaign_id,
+            "list_id": list_id,
+            "message_id": message_id,
+            "final_message_id": message_id,
+            "order": "1",
+        }
+    }
+    request("POST", "/api/3/campaignLists", json=cl_payload)
 
     # Safety gate: immediately read back and assert draft state.
     verify_draft(campaign_id)
 
     audience = _get_audience_count(list_id, segment_id)
     print(
-        f"\nDRAFT VERIFIED — campaign_id={campaign_id}, "
+        f"\nDRAFT VERIFIED -- campaign_id={campaign_id}, "
         f"list={list_id}, segment={segment_id}, "
         f"audience_count={audience}\n"
     )

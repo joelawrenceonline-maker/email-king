@@ -30,6 +30,8 @@ def main():
                         help="Create an AC message from --html-file and --subject")
     parser.add_argument("--html-file", dest="html_file", help="Path to HTML file for message body")
     parser.add_argument("--subject", dest="subject", help="Email subject line")
+    parser.add_argument("--segment-id", dest="segment_id",
+                        help="Override segment lookup — use this numeric AC segment id directly")
     parser.add_argument("--test", action="store_true", help="Target test list 7699 instead of list 22")
     args = parser.parse_args()
 
@@ -77,8 +79,12 @@ def main():
         from segment import find_segment_by_name
         from campaign import create_draft
 
-        segment_id = find_segment_by_name("joe-favorite")
-        print(f"Resolved segment 'joe-favorite' -> id={segment_id}")
+        if args.segment_id:
+            segment_id = args.segment_id
+            print(f"Using segment id={segment_id} (--segment-id override)")
+        else:
+            segment_id = find_segment_by_name("joe-favorite")
+            print(f"Resolved segment 'joe-favorite' -> id={segment_id}")
 
         subject_label = args.subject or message_id
         campaign_name = f"BCW — {subject_label}"

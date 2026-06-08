@@ -18,7 +18,7 @@ def request(method: str, path: str, **kwargs):
     except Exception:
         body = resp.text
     if not resp.ok:
-        print(f"[AC ERROR] {method} {path} → {resp.status_code}")
+        print(f"[AC ERROR] {method} {path} -> {resp.status_code}")
         print(body)
         resp.raise_for_status()
     return resp.status_code, body
