@@ -11,7 +11,10 @@ Tools:
   stage_email(subject, html, test) — full pipeline: create message + stage draft
 """
 import os
+import uvicorn
 from fastmcp import FastMCP
+from fastmcp.server.http import create_streamable_http_app
+from starlette.responses import JSONResponse
 
 mcp = FastMCP(
     "email-king",
@@ -67,8 +70,8 @@ def stage_draft(message_id: str, test: bool = False) -> str:
     Stage an ActiveCampaign draft campaign for an existing message id.
 
     Uses segment 953 (joe-favorite, ~16 475 contacts) from SEGMENT_ID env var.
-    test=True  → targets list 7699 (test audience, same segment filter)
-    test=False → targets list 22  (full production audience)
+    test=True  -> targets list 7699 (test audience, same segment filter)
+    test=False -> targets list 22  (full production audience)
 
     Verifies status=0, send_amt=0, ldate=null before returning.
     There is no send path — the campaign is a draft only.
@@ -103,8 +106,8 @@ def stage_email(subject: str, html: str, test: bool = False) -> str:
       3. V3 PUT segmentid=953 — attaches joe-favorite segment
       4. V3 GET verification — asserts status=0, send_amt=0, ldate=null
 
-    test=True  → list 7699 (test)
-    test=False → list 22  (production, ~16 475 contacts)
+    test=True  -> list 7699 (test)
+    test=False -> list 22  (production, ~16 475 contacts)
 
     There is NO send step here. Returns DRAFT VERIFIED once the campaign
     is sitting as a draft in ActiveCampaign.
@@ -130,6 +133,12 @@ def stage_email(subject: str, html: str, test: bool = False) -> str:
     )
 
 
+async def _health(request):
+    return JSONResponse({"status": "ok", "service": "email-king"})
+
+
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8000))
-    mcp.run(transport="streamable-http", host="0.0.0.0", port=port)
+    app = create_streamable_http_app(mcp, streamable_http_path="/mcp")
+    app.add_route("/health", _health)
+    uvicorn.run(app, host="0.0.0.0", port=port)
