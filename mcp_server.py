@@ -147,7 +147,7 @@ class _HealthMiddleware:
         self.app = app
 
     async def __call__(self, scope, receive, send):
-        if scope.get("type") == "http" and scope.get("path") == "/health":
+        if scope.get("type") == "http" and scope.get("path") in ("/health", "/healthz"):
             await send({
                 "type": "http.response.start",
                 "status": 200,
