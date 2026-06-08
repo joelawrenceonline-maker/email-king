@@ -33,9 +33,15 @@ def send_morning_nudge() -> None:
         headers={
             "Authorization": f"Bearer {api_key}",
             "Content-Type": "application/json",
+            "User-Agent": "email-king/0.2 (python-urllib)",
         },
     )
-    with urllib.request.urlopen(req) as resp:
-        result = json.loads(resp.read())
+    try:
+        with urllib.request.urlopen(req) as resp:
+            result = json.loads(resp.read())
+    except urllib.error.HTTPError as e:
+        error_body = e.read().decode()
+        print(f"[RESEND ERROR] HTTP {e.code}: {error_body}")
+        raise
 
     print(f"Nudge sent to {nudge_to} — Resend id: {result.get('id')}")
