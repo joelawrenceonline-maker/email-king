@@ -76,6 +76,40 @@ Only after that should you run without `--test` (which targets list 22).
 
 ---
 
+## MCP server
+
+`mcp_server.py` runs as a FastMCP server over streamable HTTP. It is the primary
+Railway process (`web:` in Procfile) and is how the Email King Claude project
+calls into email-king.
+
+### Tools exposed
+
+| Tool | Args | What it does |
+|------|------|-------------|
+| `find_segment` | `name` | Resolve a saved AC segment id by exact name |
+| `create_message` | `subject`, `html` | Create an AC message, verify HTML stored, return message id |
+| `stage_draft` | `message_id`, `test?` | Stage a draft campaign for an existing message id |
+| `stage_email` | `subject`, `html`, `test?` | Full pipeline: create message + stage draft in one call |
+
+`test=true` targets list 7699 (test audience). `test=false` (default) targets list 22 (~16,475 contacts).
+There is no send tool. All campaigns are created as drafts (status=0).
+
+### MCP endpoint
+
+```
+https://<your-railway-domain>/mcp
+```
+
+Add this to Claude's MCP settings as a **Streamable HTTP** connection.
+
+### Additional env vars needed
+
+| Variable | Description |
+|----------|-------------|
+| `SEGMENT_ID` | Numeric segment id (default `953` for joe-favorite) |
+
+---
+
 ## Local dev
 
 ```bash
