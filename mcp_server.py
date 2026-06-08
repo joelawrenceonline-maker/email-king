@@ -77,10 +77,11 @@ def stage_draft(message_id: str, test: bool = False) -> str:
     There is no send path — the campaign is a draft only.
     Returns DRAFT VERIFIED with campaign_id and audience_count.
     """
-    from campaign import create_draft, _get_audience_count
+    from campaign import create_draft, _get_audience_count, _resolve_address_id
     segment_id = _resolve_segment()
     list_id = _list_id(test)
     mode = "TEST" if test else "PRODUCTION"
+    address_id = _resolve_address_id()
     campaign_id = create_draft(
         message_id=message_id,
         segment_id=segment_id,
@@ -90,7 +91,7 @@ def stage_draft(message_id: str, test: bool = False) -> str:
     audience = _get_audience_count(list_id, segment_id)
     return (
         f"DRAFT VERIFIED -- campaign_id={campaign_id}, "
-        f"segmentid={segment_id}, list={list_id} ({mode}), "
+        f"segmentid={segment_id}, addressid={address_id}, list={list_id} ({mode}), "
         f"audience_count={audience}"
     )
 
@@ -113,10 +114,11 @@ def stage_email(subject: str, html: str, test: bool = False) -> str:
     is sitting as a draft in ActiveCampaign.
     """
     from message import create_message as _create
-    from campaign import create_draft, _get_audience_count
+    from campaign import create_draft, _get_audience_count, _resolve_address_id
     segment_id = _resolve_segment()
     list_id = _list_id(test)
     mode = "TEST" if test else "PRODUCTION"
+    address_id = _resolve_address_id()
 
     message_id = _create(subject=subject, html=html)
     campaign_id = create_draft(
@@ -128,7 +130,7 @@ def stage_email(subject: str, html: str, test: bool = False) -> str:
     audience = _get_audience_count(list_id, segment_id)
     return (
         f"DRAFT VERIFIED -- message_id={message_id}, campaign_id={campaign_id}, "
-        f"segmentid={segment_id}, list={list_id} ({mode}), "
+        f"segmentid={segment_id}, addressid={address_id}, list={list_id} ({mode}), "
         f"audience_count={audience}"
     )
 

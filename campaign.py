@@ -17,6 +17,10 @@ _AC_BASE = os.environ["AC_API_URL"].rstrip("/")
 _AC_TOKEN = os.environ["AC_API_TOKEN"]
 
 
+def _resolve_address_id() -> str:
+    return os.environ.get("ADDRESS_ID", "2")
+
+
 def _legacy(api_action: str, form_data: dict) -> dict:
     """
     POST to the AC legacy admin API. Prints the full raw response (never swallows it).
@@ -51,6 +55,8 @@ def verify_draft(campaign_id: str) -> dict:
     send_amt = str(campaign.get("send_amt", ""))
     ldate = campaign.get("ldate")
 
+    addressid = str(campaign.get("addressid", ""))
+
     errors = []
     if status != _DRAFT_STATUS:
         errors.append(f"status={status!r} (expected '0')")
@@ -58,6 +64,8 @@ def verify_draft(campaign_id: str) -> dict:
         errors.append(f"send_amt={send_amt!r} (expected '0')")
     if ldate not in (None, "", "0000-00-00 00:00:00"):
         errors.append(f"ldate={ldate!r} (expected null)")
+    if not addressid or addressid in ("0", ""):
+        errors.append(f"addressid={addressid!r} (expected non-zero — CAN-SPAM address missing)")
 
     if errors:
         raise RuntimeError(
@@ -91,30 +99,36 @@ def create_draft(
     Create an AC draft campaign (status=0), verify it, return campaign_id.
     There is no code path that sets a campaign to send.
     """
-    # Step 1: create campaign with list + message via legacy API
+    address_id = _resolve_address_id()
+
+    # Step 1: create campaign with list + message + address via legacy API
     legacy_body = _legacy("campaign_create", {
         "type": "single",
         "name": name,
         "status": "0",
         "public": "1",
+        "addressid": address_id,
         f"p[{list_id}]": list_id,
         f"m[{message_id}]": "100",
     })
     campaign_id = str(legacy_body["id"])
 
-    # Step 2: attach segment via v3 PUT (legacy has no segment field)
+    # Step 2: attach segment + address via v3 PUT (belt-and-suspenders for addressid)
     _v3("PUT", f"/api/3/campaigns/{campaign_id}", json={"campaign": {
         "segmentid": int(segment_id),
+        "addressid": int(address_id),
         "bounceid": -1,
     }})
 
-    # Step 3: safety gate — read back and assert draft state
-    verify_draft(campaign_id)
+    # Step 3: safety gate — read back and assert draft state + addressid set
+    verified = verify_draft(campaign_id)
+    stored_address = str(verified.get("addressid", ""))
 
     audience = _get_audience_count(list_id, segment_id)
     print(
         f"\nDRAFT VERIFIED -- campaign_id={campaign_id}, "
         f"segmentid={segment_id}, "
+        f"addressid={stored_address}, "
         f"audience_count={audience}\n"
     )
     return campaign_id
