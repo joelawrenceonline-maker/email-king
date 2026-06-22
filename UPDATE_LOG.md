@@ -1,5 +1,20 @@
 # Update Log
 
+## v0.4.0 — 2026-06-22
+
+Morning nudge cron — registered on Railway and fixed body/subject.
+
+- `notify.py` — corrected subject to `"Time to write today's email 📧"`; switched body
+  from plain-text to HTML with an "Open Email King →" button linking to `DRAFT_LINK`;
+  kept hard-fail raise on Resend HTTP error; added `flush=True` to prints so Railway
+  captures them before the cron container exits
+- Railway cron service `morning-nudge` created in the `email-king` project, connected
+  to `joelawrenceonline-maker/email-king`, start command `python main.py --nudge`,
+  schedule `0 12 * * 1-5` (8 am ET Mon–Fri, EDT = UTC−4); switch to `0 13 * * 1-5`
+  in November when clocks fall back to EST
+- Required env vars set on the cron service: `RESEND_API_KEY`, `NUDGE_FROM`,
+  `NUDGE_TO`, `DRAFT_LINK`
+
 ## v0.3.0 — 2026-06-08
 
 MCP server layer — exposes four tools over streamable HTTP on Railway.
