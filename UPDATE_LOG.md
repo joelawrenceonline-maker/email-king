@@ -2,7 +2,7 @@
 
 ## v0.4.0 — 2026-06-22
 
-Morning nudge cron — registered on Railway and fixed body/subject.
+Morning nudge cron — registered on Railway, fixed body/subject, GitHub auto-deploy wired up.
 
 - `notify.py` — corrected subject to `"Time to write today's email 📧"`; switched body
   from plain-text to HTML with an "Open Email King →" button linking to `DRAFT_LINK`;
@@ -14,6 +14,8 @@ Morning nudge cron — registered on Railway and fixed body/subject.
   in November when clocks fall back to EST
 - Required env vars set on the cron service: `RESEND_API_KEY`, `NUDGE_FROM`,
   `NUDGE_TO`, `DRAFT_LINK`
+- GitHub auto-deploy enabled for both `email-king` and `morning-nudge` services —
+  every push to `master` now deploys both automatically; no manual Railway deploys needed
 
 ## v0.3.0 — 2026-06-08
 

@@ -107,6 +107,22 @@ Add this to Claude's MCP settings as a **Streamable HTTP** connection.
 
 ---
 
+## Deployment
+
+Both Railway services auto-deploy from GitHub. The workflow is:
+
+```
+git push origin master  →  Railway builds and deploys both services automatically
+```
+
+- **`email-king`** (MCP server) — redeploys and restarts on every push
+- **`morning-nudge`** (cron) — redeploys on every push; runs on its cron schedule, not continuously
+
+No manual Railway deploys needed. The only time to touch Railway settings is to change
+an env var or update the cron schedule (e.g. the November DST switch).
+
+---
+
 ## Local dev
 
 ```bash
