@@ -10,7 +10,7 @@ Every campaign it creates has `status=0` (draft). There is no send-campaign code
 
 | Command | What happens |
 |---------|-------------|
-| `python main.py --nudge` | Sends *you* a reminder email: "Time to draft today's BCW email" |
+| `python main.py --nudge` | Sends *you* a reminder email: "Time to write today's email 📧" |
 | `python main.py --draft --message-id <ID>` | Creates an AC draft campaign targeting segment `joe-favorite` on list 22 |
 | `python main.py --draft --message-id <ID> --test` | Same, but targets list 7699 (test audience) |
 
@@ -42,18 +42,15 @@ Copy `.env.example` → `.env` for local dev. `.env` is gitignored.
 
 ## Railway cron — morning nudge
 
-Create a **Cron Job** service in Railway with:
+The **`morning-nudge`** cron service is live in the `email-king` Railway project.
 
+- **Service:** `morning-nudge` (id: `bc83a1e7-1aaa-4030-b5be-4cb10de9f478`)
 - **Command:** `python main.py --nudge`
-- **Schedule:** `0 13 * * 1-5`
+- **Current schedule:** `0 12 * * 1-5` — fires **8:00 AM ET Mon–Fri (EDT = UTC−4)**
+- **November DST:** change to `0 13 * * 1-5` when clocks fall back to EST (UTC−5)
 
-This fires at **13:00 UTC**, which is:
-- **8:00 AM EST** (UTC−5, Nov–Mar)
-- **9:00 AM EDT** (UTC−4, Mar–Nov)
-
-> Heads-up: Railway cron uses UTC. Adjust the hour by one in March and November
-> when the US clocks change if exact 8 AM ET matters. A common compromise is
-> `0 13 * * 1-5` year-round (8 AM EST / 9 AM EDT).
+Sends an HTML email with an "Open Email King →" button to `NUDGE_TO`.
+Hard-fails (exits non-zero) if Resend returns an HTTP error — Railway will log it.
 
 ---
 
