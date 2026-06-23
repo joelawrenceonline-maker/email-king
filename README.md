@@ -45,12 +45,16 @@ Copy `.env.example` → `.env` for local dev. `.env` is gitignored.
 The **`morning-nudge`** cron service is live in the `email-king` Railway project.
 
 - **Service:** `morning-nudge` (id: `bc83a1e7-1aaa-4030-b5be-4cb10de9f478`)
-- **Command:** `python main.py --nudge`
+- **Command:** `python main.py --nudge` *(set per-service in Railway, not in railway.toml)*
 - **Current schedule:** `0 12 * * 1-5` — fires **8:00 AM ET Mon–Fri (EDT = UTC−4)**
 - **November DST:** change to `0 13 * * 1-5` when clocks fall back to EST (UTC−5)
 
 Sends an HTML email with an "Open Email King →" button to `NUDGE_TO`.
 Hard-fails (exits non-zero) if Resend returns an HTTP error — Railway will log it.
+
+> **Note:** `railway.toml` does NOT set `startCommand` — doing so applies to all services
+> in the repo and would override this cron's command with the MCP server's. Start commands
+> and health checks are configured per-service in the Railway dashboard/API instead.
 
 ---
 

@@ -1,5 +1,22 @@
 # Update Log
 
+## v0.4.1 — 2026-06-23
+
+Fix morning-nudge cron never firing — railway.toml startCommand conflict.
+
+- Root cause: `railway.toml` defined `startCommand = "python mcp_server.py"` at the
+  project level, overriding the per-service UI setting on `morning-nudge` and causing
+  it to run uvicorn (the MCP server) instead of `python main.py --nudge`; the cron
+  schedule was also missing from the service config, so it ran as a regular always-on
+  service rather than a cron job
+- `railway.toml` — removed `startCommand`, `healthcheckPath`, and `healthcheckTimeout`
+  from the shared `[deploy]` block; these are now set per-service in Railway directly
+- Railway `morning-nudge` service — start command explicitly set to
+  `python main.py --nudge`, cron schedule set to `0 12 * * 1-5` (8 AM ET Mon–Fri),
+  health check cleared (not applicable to cron services)
+- Railway `email-king` service — start command explicitly set to `python mcp_server.py`,
+  health check path set to `/health`
+
 ## v0.4.0 — 2026-06-22
 
 Morning nudge cron — registered on Railway, fixed body/subject, GitHub auto-deploy wired up.
