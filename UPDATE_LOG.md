@@ -1,5 +1,25 @@
 # Update Log
 
+## v0.4.2 — 2026-06-30
+
+Fix morning-nudge never sending — GitHub auto-deploy had silently lost its connection to Railway,
+so the v0.4.1 fix (removing `startCommand` from `railway.toml`) was never deployed. Every cron
+run from June 24–30 was still using the June 22 image, which ran `mcp_server.py` (uvicorn)
+instead of `main.py --nudge`. Confirmed via Resend dashboard: zero emails sent since June 8.
+
+- Root cause: Railway GitHub App lost its branch tracking for both services; no webhooks
+  were registered on the repo, and pushes after June 22 never triggered a deploy
+- Fix: manually deployed fresh code to both services via Railway MCP; reconnected both
+  services to `joelawrenceonline-maker/email-king@master` using `connect_service_source`,
+  which immediately picked up the pending commits and restored auto-deploy
+- `morning-nudge` start command changed from `python main.py --nudge` to
+  `python -u main.py --nudge` — the `-u` flag forces unbuffered stdout so Railway captures
+  logs even when the cron container exits in under a second
+- Nudge confirmed working: email delivered to `joelawrenceonline@gmail.com` at 16:20 UTC
+- If auto-deploy ever breaks again: run `connect_service_source` for both services via
+  Railway MCP (no disconnect needed), or check `github.com/settings/installations` →
+  Railway → confirm `email-king` repo is in the allowed list
+
 ## v0.4.1 — 2026-06-23
 
 Fix morning-nudge cron never firing — railway.toml startCommand conflict.

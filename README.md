@@ -121,6 +121,17 @@ git push origin master  →  Railway builds and deploys both services automatica
 No manual Railway deploys needed. The only time to touch Railway settings is to change
 an env var or update the cron schedule (e.g. the November DST switch).
 
+### If auto-deploy stops working
+
+Symptom: pushes to `master` don't trigger new Railway deployments.
+
+Fix (no disconnect needed): re-run `connect_service_source` for both services via Railway MCP,
+pointing to `joelawrenceonline-maker/email-king@master`. Railway will immediately pick up any
+pending commits and restore auto-deploy going forward.
+
+Also check: `github.com/settings/installations` → Railway → confirm `email-king` is in the
+allowed repository list.
+
 ---
 
 ## Local dev
