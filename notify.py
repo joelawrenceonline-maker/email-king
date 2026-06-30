@@ -57,3 +57,11 @@ def send_morning_nudge() -> None:
         raise
 
     print(f"[nudge] Sent to {nudge_to} — Resend id: {result.get('id')}", flush=True)
+
+    healthcheck_url = os.environ.get("HEALTHCHECK_URL")
+    if healthcheck_url:
+        try:
+            urllib.request.urlopen(healthcheck_url, timeout=5)
+            print("[nudge] Healthcheck pinged.", flush=True)
+        except Exception as e:
+            print(f"[nudge] Healthcheck ping failed (non-fatal): {e}", flush=True)
