@@ -1,4 +1,4 @@
-"""
+"""  # noqa: D400
 email-king CLI.
 
   python main.py --nudge
