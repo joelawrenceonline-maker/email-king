@@ -15,7 +15,7 @@ Every campaign it creates has `status=0` (draft). There is no send-campaign code
 | `python main.py --draft --message-id <ID> --test` | Same, but targets list 7699 (test audience) |
 
 ### Draft staging details
-1. Resolves the AC segment named `joe-favorite` by exact name (never a hardcoded id).
+1. Uses the `SEGMENT_ID` env var (default `953` = joe-favorite) to identify the segment. Pass `--segment-id <N>` to override, or omit both to fall back to a live name-lookup via the AC API.
 2. Creates a campaign with `status=0`, `type=single`, attached to that segment and list.
 3. Immediately GETs the campaign back and asserts `status=="0"`, `send_amt=="0"`, `ldate` is null.
 4. Prints `DRAFT VERIFIED — campaign_id=…` on success. Raises loudly on any violation.
@@ -31,6 +31,8 @@ Set these in Railway (never commit real values):
 |----------|-------------|
 | `AC_API_URL` | Your AC account API base URL, e.g. `https://youraccount.api-us1.com` |
 | `AC_API_TOKEN` | ActiveCampaign API token (Settings → Developer) |
+| `SEGMENT_ID` | Numeric AC segment id (default `953` = joe-favorite) |
+| `ADDRESS_ID` | AC physical address id for CAN-SPAM compliance (default `2`) |
 | `NUDGE_TO` | Your personal email address that receives the morning reminder |
 | `NUDGE_FROM` | From address for nudge emails (must be a verified Resend sender) |
 | `DRAFT_LINK` | URL to open when the nudge arrives (e.g. your AC campaigns dashboard) |
@@ -102,12 +104,6 @@ https://<your-railway-domain>/mcp
 ```
 
 Add this to Claude's MCP settings as a **Streamable HTTP** connection.
-
-### Additional env vars needed
-
-| Variable | Description |
-|----------|-------------|
-| `SEGMENT_ID` | Numeric segment id (default `953` for joe-favorite) |
 
 ---
 
