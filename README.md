@@ -37,6 +37,7 @@ Set these in Railway (never commit real values):
 | `NUDGE_FROM` | From address for nudge emails (must be a verified Resend sender) |
 | `DRAFT_LINK` | URL to open when the nudge arrives (e.g. your AC campaigns dashboard) |
 | `RESEND_API_KEY` | Resend API key for outbound nudge email |
+| `HEALTHCHECK_URL` | Healthchecks.io ping URL — hit after every successful nudge send |
 
 Copy `.env.example` → `.env` for local dev. `.env` is gitignored.
 
@@ -49,7 +50,7 @@ The **`morning-nudge`** cron service is live in the `email-king` Railway project
 - **Service:** `morning-nudge` (id: `bc83a1e7-1aaa-4030-b5be-4cb10de9f478`)
 - **Command:** `python main.py --nudge` *(set per-service in Railway, not in railway.toml)*
 - **Current schedule:** `0 12 * * 1-5` — fires **8:00 AM ET Mon–Fri (EDT = UTC−4)**
-- **November DST:** change to `0 13 * * 1-5` when clocks fall back to EST (UTC−5)
+- **November DST:** change to `0 13 * * 1-5` when clocks fall back to EST (UTC−5) — update both Railway AND Healthchecks schedule
 
 Sends an HTML email with an "Open Email King →" button to `NUDGE_TO`.
 Hard-fails (exits non-zero) if Resend returns an HTTP error — Railway will log it.
@@ -131,6 +132,23 @@ pending commits and restore auto-deploy going forward.
 
 Also check: `github.com/settings/installations` → Railway → confirm `email-king` is in the
 allowed repository list.
+
+---
+
+## Monitoring
+
+The `morning-nudge` cron is monitored by **Healthchecks.io**.
+
+- **Check:** `morning-nudge` (uuid: `142fac01-1fcd-42c7-820c-b0d2d4a316dd`)
+- **Schedule:** `0 12 * * 1-5` UTC — matches the Railway cron exactly
+- **Grace period:** 2 hours — alert fires if no ping by 10:00 AM ET
+- **Alert:** email to `joelawrenceonline@gmail.com` when the check goes down
+
+After each successful Resend delivery, `notify.py` pings `HEALTHCHECK_URL`. If any weekday
+morning passes without a ping, Healthchecks sends an email alert.
+
+**November DST:** update the Healthchecks schedule alongside the Railway cron — both must
+change from `0 12 * * 1-5` to `0 13 * * 1-5` when clocks fall back to EST.
 
 ---
 

@@ -1,5 +1,19 @@
 # Update Log
 
+## v0.4.3 — 2026-06-30
+
+Healthchecks.io monitoring — alert when morning nudge stops firing.
+
+- `notify.py` — pings `HEALTHCHECK_URL` after every successful Resend delivery; non-fatal
+  if the ping itself fails (logged but does not block the nudge)
+- Railway `morning-nudge` — `HEALTHCHECK_URL` env var set to
+  `https://hc-ping.com/142fac01-1fcd-42c7-820c-b0d2d4a316dd`
+- Healthchecks check `morning-nudge` — schedule `0 12 * * 1-5` UTC, grace 2 hours,
+  email alert to `joelawrenceonline@gmail.com` on "check goes down"
+- If any weekday passes without a ping by 10:00 AM ET, an alert email fires automatically
+- **November DST reminder:** update both Railway cron AND Healthchecks schedule from
+  `0 12 * * 1-5` to `0 13 * * 1-5` when clocks fall back
+
 ## v0.4.2 — 2026-06-30
 
 Fix morning-nudge never sending — GitHub auto-deploy had silently lost its connection to Railway,
